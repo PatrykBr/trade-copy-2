@@ -171,19 +171,19 @@ git clone https://github.com/PatrykBr/trade-copy-2 .
 ```bash
 cat > .env << 'EOF'
 # Supabase (get from Supabase → Settings → API)
-NEXT_PUBLIC_SUPABASE_URL=https://<your-project-id>.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon_key>
-SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
+NEXT_PUBLIC_SUPABASE_URL=https://mztltkpdxxhburbwkgrs.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16dGx0a3BkeHhoYnVyYndrZ3JzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMjIyMzYsImV4cCI6MjA3Mzc5ODIzNn0.bAotBtTt_lZZe0WSjsvAcSDv050rA9o7H_Clck0YUrI
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16dGx0a3BkeHhoYnVyYndrZ3JzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODIyMjIzNiwiZXhwIjoyMDczNzk4MjM2fQ.GxQfSd3apQRiscWuG4CM795PH5VZOabxrA0qeT8sce4
 
 # Security (generate long random strings)
-ENCRYPTION_KEY=<32+ char random>
-JWT_SECRET=<32+ char random>
+ENCRYPTION_KEY=a34fa3bcc2a5c33fb6c35e70f5e14e52
+JWT_SECRET=PSA26sRfgPK8IdmE002w9TWtwtPUK98JVrqcB6O0EMRPSulXjYrSCq5aOBDQbcywaohLAO/pxfQm6LJkAhk7OA==
 
 # WebSocket
 WEBSOCKET_PORT=3001
 
 # Optional: secure token for workers pushing to API
-WORKER_INGEST_TOKEN=<random_secret>
+WORKER_INGEST_TOKEN=2063ec90235204f07876e6f0a4bffaf9
 EOF
 ```
 If you ever edit `.env` on Windows, re‑create it on Linux as above (Windows Notepad can add a BOM that breaks Compose).
@@ -196,7 +196,11 @@ docker compose logs -f web | sed -n '1,120p'
 ```
 If this errors:
 - Recreate `.env` exactly as step 4 (UTF‑8, no BOM).
-- Rebuild web without cache: `docker compose build web --no-cache && docker compose up -d web`.
+- Install missing build deps inside the Dockerfile (we already included dev deps in a multi‑stage) and rebuild web without cache:
+  ```bash
+  docker compose build web --no-cache
+  docker compose up -d web
+  ```
 - Use `docker compose logs <service>` to view errors.
 
 6) HTTPS (choose ONE)

@@ -217,6 +217,76 @@ export interface Database {
           updated_at?: string
         }
       }
+      copy_operations: {
+        Row: {
+          id: string
+          master_trade_id: string
+          copy_rule_id: string
+          slave_trade_id: string | null
+          operation_type: string
+          status: string
+          error_message: string | null
+          latency_ms: number | null
+          executed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          master_trade_id: string
+          copy_rule_id: string
+          slave_trade_id?: string | null
+          operation_type: string
+          status: string
+          error_message?: string | null
+          latency_ms?: number | null
+          executed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          master_trade_id?: string
+          copy_rule_id?: string
+          slave_trade_id?: string | null
+          operation_type?: string
+          status?: string
+          error_message?: string | null
+          latency_ms?: number | null
+          executed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      system_events: {
+        Row: {
+          id: string
+          event_type: string
+          account_id: string | null
+          severity: string
+          message: string
+          metadata: Record<string, unknown> | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          event_type: string
+          account_id?: string | null
+          severity: string
+          message: string
+          metadata?: any | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          event_type?: string
+          account_id?: string | null
+          severity?: string
+          message?: string
+          metadata?: any | null
+          created_at?: string
+        }
+      }
     }
   }
 }

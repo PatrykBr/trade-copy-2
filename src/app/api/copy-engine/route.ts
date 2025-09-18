@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient, supabaseAdmin } from '@/lib/supabase-server'
+import { Database } from '@/lib/supabase-types'
 
 interface CopyOperation {
   masterTradeId: string
@@ -7,9 +8,11 @@ interface CopyOperation {
   operationType: 'OPEN' | 'CLOSE' | 'MODIFY'
 }
 
+type Trade = Database['public']['Tables']['trades']['Row']
+type CopyRule = Database['public']['Tables']['copy_rules']['Row']
+
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient()
     
     // This endpoint would typically be called by the VPS infrastructure
     // For now, we'll implement a basic copy engine logic
@@ -48,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate the master trade belongs to the master account
-    if (masterTrade.account_id !== copyRule.master_account_id) {
+    if ((masterTrade as Trade).account_id !== copyRule.master_account_id) {
       return NextResponse.json({ error: 'Trade does not belong to master account' }, { status: 403 })
     }
 
@@ -224,7 +227,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function passesFilters(trade: any, copyRule: any): boolean {
+function passesFilters(trade: Trade, copyRule: CopyRule): boolean {
   // Check symbol filter
   if (copyRule.symbol_filter && copyRule.symbol_filter.length > 0) {
     if (!copyRule.symbol_filter.includes(trade.symbol)) {
@@ -242,7 +245,7 @@ function passesFilters(trade: any, copyRule: any): boolean {
   return true
 }
 
-function calculateLotSize(masterLotSize: number, copyRule: any): number {
+function calculateLotSize(masterLotSize: number, copyRule: CopyRule): number {
   const calculatedLots = masterLotSize * copyRule.lot_multiplier
   return Math.min(calculatedLots, copyRule.max_lot_size)
 }
@@ -253,7 +256,7 @@ function generateSlaveTicket(): number {
   return Math.floor(Math.random() * 1000000000) + 1000000000
 }
 
-function calculateSlaveProfit(masterTrade: any, slaveTrade: any, copyRule: any): number {
+function calculateSlaveProfit(masterTrade: Trade, slaveTrade: Trade, _copyRule: CopyRule): number {
   // Simplified profit calculation
   // In reality, this would consider spread differences, commission, etc.
   const masterProfit = masterTrade.profit || 0
