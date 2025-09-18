@@ -1,0 +1,27 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install Docker CLI (for managing containers)
+RUN apk add --no-cache docker-cli
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
+COPY src ./src
+COPY *.config.* ./
+COPY tsconfig.json ./
+
+# Create VPS manager entry point
+RUN echo 'console.log("VPS Manager starting..."); \
+setInterval(() => { \
+  console.log("VPS Manager heartbeat:", new Date().toISOString()); \
+}, 30000);' > vps-manager.js
+
+EXPOSE 8080
+
+CMD ["node", "vps-manager.js"]

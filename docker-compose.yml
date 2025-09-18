@@ -1,0 +1,128 @@
+services:
+  # Next.js Web Application
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - websocket
+    networks:
+      - trade-copier-network
+
+  # WebSocket Server
+  websocket:
+    build:
+      context: .
+      dockerfile: Dockerfile.websocket
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - trade-copier-network
+
+  # VPS Container Manager
+  vps-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile.vps-manager
+    environment:
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - DOCKER_REGISTRY_URL=${DOCKER_REGISTRY_URL}
+      - DOCKER_REGISTRY_TOKEN=${DOCKER_REGISTRY_TOKEN}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./logs:/app/logs
+    networks:
+      - trade-copier-network
+
+  # MT4 Container Template (dynamically created)
+  mt4-template:
+    build:
+      context: ./docker/mt4-ea
+    environment:
+      - ACCOUNT_ID=${ACCOUNT_ID:-demo-account}
+      - API_KEY=${API_KEY:-demo-api-key}
+      - MT4_LOGIN=${MT4_LOGIN:-123456}
+      - MT4_PASSWORD=${MT4_PASSWORD:-demo-password}
+      - MT4_SERVER=${MT4_SERVER:-Demo-Server}
+      - API_ENDPOINT=http://web:3000/api
+      - WEBSOCKET_ENDPOINT=ws://websocket:3001
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    networks:
+      - trade-copier-network
+    profiles:
+      - template  # This won't start by default
+
+  # Redis for caching and queuing
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - trade-copier-network
+
+  # Monitoring and Logging
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - trade-copier-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana:/etc/grafana/provisioning
+    networks:
+      - trade-copier-network
+
+  # Load Balancer
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./logs:/var/log/nginx
+    depends_on:
+      - web
+      - websocket
+    networks:
+      - trade-copier-network
+
+volumes:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  trade-copier-network:
+    driver: bridge

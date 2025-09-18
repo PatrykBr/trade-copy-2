@@ -1,0 +1,30 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
+COPY src ./src
+COPY *.config.* ./
+COPY tsconfig.json ./
+
+# Create WebSocket server entry point
+RUN echo 'const { createServer } = require("http"); \
+const { Server } = require("socket.io"); \
+const server = createServer(); \
+const io = new Server(server, { cors: { origin: "*" } }); \
+io.on("connection", (socket) => { \
+  console.log("Client connected:", socket.id); \
+  socket.on("disconnect", () => console.log("Client disconnected:", socket.id)); \
+}); \
+const PORT = process.env.WEBSOCKET_PORT || 3001; \
+server.listen(PORT, () => console.log(`WebSocket server running on port ${PORT}`));' > websocket-server.js
+
+EXPOSE 3001
+
+CMD ["node", "websocket-server.js"]

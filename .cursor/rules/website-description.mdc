@@ -1,0 +1,157 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# 🎯 Fully Managed Trade Copier Website — Production-Ready Spec
+
+Build a **centralized, fully managed MT4/MT5 trade copier website**.
+
+**Key principle:** Users interact only with the web app. They never install or run their own EAs. All trade replication happens in backend infrastructure with millisecond latency.
+
+---
+
+## 🏗️ Core Requirements
+
+* **Latency:** Trade replication <50ms (goal 1–2ms detection, 10–50ms execution).
+* **UX:** 100% web-based — account registration, copier setup, monitoring.
+* **Backend stack:** Next.js + Supabase (extend as needed).
+* **Infra:** Oracle Cloud VPS farm (scalable, dockerized).
+* **Cost:** Prefer free/open-source components over paid APIs.
+* **Reliability:** 99.9% uptime, robust retries, fault tolerance.
+* **Security:** Encrypt + securely store broker credentials.
+* **Scalability:** Support from dozens → tens of thousands of accounts.
+
+---
+
+## 🏗️ Architecture: Centralized VPS Farm
+
+```
+┌───────────────────┐    ┌──────────────────────┐    ┌─────────────────┐
+│  User Website     │    │  VPS Farm            │    │ Broker Servers  │
+│ • Register/login  │◄──►│ • MT4/MT5 containers │◄──►│ • Live/demo acc │
+│ • Setup copier    │    │ • Auto-login/monitor │    │ • Execution     │
+│ • Config rules    │    │ • Trade detection    │    │ • Market data   │
+│ • Monitoring/logs │    │ • Copy execution     │    │                 │
+└───────────────────┘    └──────────────────────┘    └─────────────────┘
+```
+
+---
+
+## 📋 User Flow
+
+1. **Registration**
+
+   * User creates web account
+   * Enters MT4/MT5 creds (login, password, server)
+   * Chooses master/slave + copy rules
+
+2. **Automatic Deployment**
+
+   * Validate credentials
+   * Assign account to VPS container
+   * Auto-connect to broker
+
+3. **Trade Copying**
+
+   * Detect master trades in real time
+   * Apply copy rules + lot sizing
+   * Execute instantly on slave accounts
+   * Real-time logs + dashboards
+
+---
+
+## 🛠️ Technical Components
+
+**1. VPS Infrastructure**
+
+* Dockerized MT4/MT5 + EAs
+* Oracle Cloud VPS, containerized
+* Auto-scaling (Kubernetes when >500 users)
+* Separate pools for demo/live
+
+**2. Connection Manager**
+
+* Secure credential vault (Supabase + KMS)
+* Automatic logins, retries, health checks
+
+**3. Trade Detection Engine**
+
+* Event-driven (websockets, pub/sub)
+* Normalize + deduplicate events
+* Latency target: 1–2ms detection
+
+**4. Copy Execution Engine**
+
+* Apply mappings + risk rules
+* Atomic trade ops
+* Confirm execution + retry on error
+
+**5. Monitoring & Analytics**
+
+* Real-time dashboards (Next.js frontend)
+* Alerts + health checks
+* Usage metrics (scaling + billing)
+
+---
+
+## 📈 Scaling Roadmap
+
+* **Phase 1:** Single Oracle VPS (50–100 accounts)
+* **Phase 2:** Oracle VPS cluster, load balanced (1k–10k users)
+* **Phase 3:** Multi-region, distributed infra (10k+ users)
+
+**Capacity:** \~100 accounts per VPS
+
+---
+
+## 💰 Costs & Monetization
+
+* VPS cost: \$50–100/month per 100 accounts
+* Revenue: subscription tiers, per-trade fees, premium analytics
+
+---
+
+## 🚀 Deployment Phases
+
+1. **MVP (Month 1–2):** Single VPS, manual setup, 10–50 users
+2. **Automation (Month 3–4):** Automated deployment, monitoring, 100–500 users
+3. **Scale (Month 5–6):** Multi-VPS auto-scaling, multi-region, 1k+ users
+
+---
+
+## ⚡ Deliverables
+
+* **Frontend (Next.js + Tailwind):**
+
+  * Registration/login
+  * Copier config (master/slave + rules)
+  * Real-time monitoring dashboard
+  * Logs + system status
+
+* **Backend (Supabase + VPS farm):**
+
+  * Secure storage for credentials
+  * Connection manager (auto-login, retries)
+  * Trade detection + execution engines
+  * Event broadcasting (websocket/pubsub)
+  * Monitoring + analytics APIs
+
+* **Infra (Oracle Cloud):**
+
+  * Dockerized MT4/MT5 containers
+  * Load balancing + scaling policies
+  * Central logging + alerts
+
+---
+
+## ❗ Constraints
+
+* **No mock implementations or simulations.**
+* Must run in production with real MT4/MT5 accounts.
+* Use Supabase MCP server to explore and update DB schema as needed.
+
+---
+
+**Final Task:**
+👉 Code the **frontend, backend, and infrastructure** for this centralized trade copier system. Ensure **millisecond-level trade replication**, reliability, and smooth scaling — without requiring users to install or manage their own EAs.
