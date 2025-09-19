@@ -51,17 +51,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate the master trade belongs to the master account
-    if ((masterTrade as Trade).account_id !== copyRule.master_account_id) {
+    if ((masterTrade as Trade).account_id !== (copyRule as CopyRule).master_account_id) {
       return NextResponse.json({ error: 'Trade does not belong to master account' }, { status: 403 })
     }
 
     // Apply filters
-    if (!passesFilters(masterTrade, copyRule)) {
+    if (!passesFilters(masterTrade as Trade, copyRule as CopyRule)) {
       return NextResponse.json({ message: 'Trade filtered out', copied: false })
     }
 
     // Calculate lot size based on copy rule
-    const calculatedLotSize = calculateLotSize(masterTrade.lot_size, copyRule)
+    const calculatedLotSize = calculateLotSize((masterTrade as Trade).lot_size, copyRule as CopyRule)
 
     // Create copy operation record
     const { data: copyOperation, error: copyOpError } = await supabaseAdmin
@@ -90,16 +90,16 @@ export async function POST(request: NextRequest) {
         const { data: slaveTrade, error: slaveTradeError } = await supabaseAdmin
           .from('trades')
           .insert({
-            account_id: copyRule.slave_account_id,
+            account_id: (copyRule as CopyRule).slave_account_id,
             ticket: generateSlaveTicket(), // Generate unique ticket for slave
-            symbol: masterTrade.symbol,
-            trade_type: masterTrade.trade_type,
+            symbol: (masterTrade as Trade).symbol,
+            trade_type: (masterTrade as Trade).trade_type,
             lot_size: calculatedLotSize,
-            open_price: masterTrade.open_price,
-            stop_loss: copyRule.copy_stop_loss ? masterTrade.stop_loss : null,
-            take_profit: copyRule.copy_take_profit ? masterTrade.take_profit : null,
-            magic_number: masterTrade.magic_number,
-            comment: `Copy of ${masterTrade.ticket}`,
+            open_price: (masterTrade as Trade).open_price,
+            stop_loss: (copyRule as CopyRule).copy_stop_loss ? (masterTrade as Trade).stop_loss : null,
+            take_profit: (copyRule as CopyRule).copy_take_profit ? (masterTrade as Trade).take_profit : null,
+            magic_number: (masterTrade as Trade).magic_number,
+            comment: `Copy of ${(masterTrade as Trade).ticket}`,
             open_time: new Date().toISOString(),
             status: 'open',
             is_copied_trade: true,
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
           .from('trades')
           .select('*')
           .eq('master_trade_id', masterTradeId)
-          .eq('account_id', copyRule.slave_account_id)
+          .eq('account_id', (copyRule as CopyRule).slave_account_id)
           .eq('status', 'open')
           .single()
 
@@ -130,10 +130,10 @@ export async function POST(request: NextRequest) {
         const { data: updatedSlaveTrade, error: updateError } = await supabaseAdmin
           .from('trades')
           .update({
-            close_price: masterTrade.close_price,
+            close_price: (masterTrade as Trade).close_price,
             close_time: new Date().toISOString(),
             status: 'closed',
-            profit: calculateSlaveProfit(masterTrade, slaveTrade, copyRule),
+            profit: calculateSlaveProfit(masterTrade as Trade, slaveTrade as Trade),
           })
           .eq('id', slaveTrade.id)
           .select()
@@ -164,9 +164,9 @@ export async function POST(request: NextRequest) {
         .from('system_events')
         .insert({
           event_type: 'trade_copied',
-          account_id: copyRule.slave_account_id,
+          account_id: (copyRule as CopyRule).slave_account_id,
           severity: 'info',
-          message: `Trade ${masterTrade.ticket} copied successfully`,
+          message: `Trade ${(masterTrade as Trade).ticket} copied successfully`,
           metadata: {
             master_trade_id: masterTradeId,
             slave_trade_id: slaveTradeData?.id,
@@ -202,9 +202,9 @@ export async function POST(request: NextRequest) {
         .from('system_events')
         .insert({
           event_type: 'trade_copy_failed',
-          account_id: copyRule.slave_account_id,
+          account_id: (copyRule as CopyRule).slave_account_id,
           severity: 'error',
-          message: `Failed to copy trade ${masterTrade.ticket}: ${errorMessage}`,
+          message: `Failed to copy trade ${(masterTrade as Trade).ticket}: ${errorMessage}`,
           metadata: {
             master_trade_id: masterTradeId,
             operation_type: operationType,
@@ -237,7 +237,7 @@ function passesFilters(trade: Trade, copyRule: CopyRule): boolean {
 
   // Check magic number filter
   if (copyRule.magic_number_filter && copyRule.magic_number_filter.length > 0) {
-    if (!copyRule.magic_number_filter.includes(trade.magic_number)) {
+    if (trade.magic_number === null || !copyRule.magic_number_filter.includes(trade.magic_number)) {
       return false
     }
   }
@@ -246,8 +246,10 @@ function passesFilters(trade: Trade, copyRule: CopyRule): boolean {
 }
 
 function calculateLotSize(masterLotSize: number, copyRule: CopyRule): number {
-  const calculatedLots = masterLotSize * copyRule.lot_multiplier
-  return Math.min(calculatedLots, copyRule.max_lot_size)
+  const multiplier = copyRule.lot_multiplier ?? 1.0
+  const maxLotSize = copyRule.max_lot_size ?? 10.0
+  const calculatedLots = masterLotSize * multiplier
+  return Math.min(calculatedLots, maxLotSize)
 }
 
 function generateSlaveTicket(): number {
@@ -256,7 +258,7 @@ function generateSlaveTicket(): number {
   return Math.floor(Math.random() * 1000000000) + 1000000000
 }
 
-function calculateSlaveProfit(masterTrade: Trade, slaveTrade: Trade, _copyRule: CopyRule): number {
+function calculateSlaveProfit(masterTrade: Trade, slaveTrade: Trade): number {
   // Simplified profit calculation
   // In reality, this would consider spread differences, commission, etc.
   const masterProfit = masterTrade.profit || 0
@@ -266,7 +268,7 @@ function calculateSlaveProfit(masterTrade: Trade, slaveTrade: Trade, _copyRule: 
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     // Get user from auth
     const { data: { user }, error: authError } = await supabase.auth.getUser()

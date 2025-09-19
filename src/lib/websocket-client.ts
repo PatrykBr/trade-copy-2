@@ -141,13 +141,13 @@ export function useWebSocket(options: WebSocketHookOptions = {}) {
     }
   }
 
-  const on = (event: string, callback: (...args: any[]) => void) => {
+  const on = (event: string, callback: (...args: unknown[]) => void) => {
     if (socketRef.current) {
       socketRef.current.on(event, callback)
     }
   }
 
-  const off = (event: string, callback?: (...args: any[]) => void) => {
+  const off = (event: string, callback?: (...args: unknown[]) => void) => {
     if (socketRef.current) {
       socketRef.current.off(event, callback)
     }
@@ -170,14 +170,15 @@ export function useWebSocket(options: WebSocketHookOptions = {}) {
 
 // Hook for subscribing to trade updates
 export function useTradeUpdates(accountId?: string) {
-  const [trades, setTrades] = useState<any[]>([])
-  const [latestTrade, setLatestTrade] = useState<any | null>(null)
+  const [trades, setTrades] = useState<Array<Record<string, unknown>>>([])
+  const [latestTrade, setLatestTrade] = useState<Record<string, unknown> | null>(null)
   const { socket, isConnected, subscribeToAccount, unsubscribe, on, off } = useWebSocket()
 
   useEffect(() => {
     if (!isConnected || !socket) return
 
-    const handleTradeUpdate = (data: { type: string; trade: any }) => {
+    const handleTradeUpdate = (...args: unknown[]) => {
+      const data = args[0] as { type: string; trade: Record<string, unknown> }
       setLatestTrade(data.trade)
       
       if (data.type === 'insert') {
@@ -210,14 +211,15 @@ export function useTradeUpdates(accountId?: string) {
 
 // Hook for subscribing to copy operation updates
 export function useCopyOperationUpdates(copyRuleId?: string) {
-  const [operations, setOperations] = useState<any[]>([])
-  const [latestOperation, setLatestOperation] = useState<any | null>(null)
+  const [operations, setOperations] = useState<Array<Record<string, unknown>>>([])
+  const [latestOperation, setLatestOperation] = useState<Record<string, unknown> | null>(null)
   const { socket, isConnected, subscribeToCopyRule, unsubscribe, on, off } = useWebSocket()
 
   useEffect(() => {
     if (!isConnected || !socket) return
 
-    const handleCopyOperationUpdate = (data: { type: string; operation: any }) => {
+    const handleCopyOperationUpdate = (...args: unknown[]) => {
+      const data = args[0] as { type: string; operation: Record<string, unknown> }
       setLatestOperation(data.operation)
       
       if (data.type === 'insert') {
@@ -250,18 +252,20 @@ export function useCopyOperationUpdates(copyRuleId?: string) {
 
 // Hook for system events and alerts
 export function useSystemEvents() {
-  const [events, setEvents] = useState<any[]>([])
-  const [alerts, setAlerts] = useState<any[]>([])
+  const [events, setEvents] = useState<Array<Record<string, unknown>>>([])
+  const [alerts, setAlerts] = useState<Array<Record<string, unknown>>>([])
   const { socket, isConnected, on, off } = useWebSocket()
 
   useEffect(() => {
     if (!isConnected || !socket) return
 
-    const handleSystemEvent = (data: { event: any }) => {
+    const handleSystemEvent = (...args: unknown[]) => {
+      const data = args[0] as { event: Record<string, unknown> }
       setEvents(prev => [data.event, ...prev.slice(0, 99)]) // Keep last 100 events
     }
 
-    const handleSystemAlert = (data: { message: string; severity: string; timestamp: string }) => {
+    const handleSystemAlert = (...args: unknown[]) => {
+      const data = args[0] as { message: string; severity: string; timestamp: string }
       setAlerts(prev => [data, ...prev.slice(0, 19)]) // Keep last 20 alerts
     }
 
@@ -284,13 +288,14 @@ export function useSystemEvents() {
 
 // Hook for account status updates
 export function useAccountStatus(accountId?: string) {
-  const [accountStatus, setAccountStatus] = useState<any | null>(null)
+  const [accountStatus, setAccountStatus] = useState<Record<string, unknown> | null>(null)
   const { socket, isConnected, subscribeToAccount, unsubscribe, on, off } = useWebSocket()
 
   useEffect(() => {
     if (!isConnected || !socket) return
 
-    const handleAccountUpdate = (data: { type: string; account: any }) => {
+    const handleAccountUpdate = (...args: unknown[]) => {
+      const data = args[0] as { type: string; account: Record<string, unknown> }
       if (!accountId || data.account.id === accountId) {
         setAccountStatus(data.account)
       }

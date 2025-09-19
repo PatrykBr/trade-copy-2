@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient, supabaseAdmin } from '@/lib/supabase-server'
+import { Database } from '@/lib/supabase-types'
+
+type MTAccount = Database['public']['Tables']['mt_accounts']['Row']
 import { decryptCredentials } from '@/lib/encryption'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     // Get user from auth
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -49,7 +52,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function deployAccount(account: any) {
+async function deployAccount(account: MTAccount) {
   try {
     // Find available VPS container
     const { data: availableContainer, error: containerError } = await supabaseAdmin
@@ -75,14 +78,7 @@ async function deployAccount(account: any) {
     const credentials = decryptCredentials(account.account_password_encrypted)
 
     // Deploy to container (this would be a real Docker/Kubernetes deployment)
-    const deploymentResult = await deployToContainer(containerId, {
-      accountId: account.id,
-      login: credentials.login,
-      password: credentials.password,
-      server: credentials.server,
-      platform: account.platform,
-      role: account.role,
-    })
+    const deploymentResult = await deployToContainer(containerId, account)
 
     if (!deploymentResult.success) {
       throw new Error(deploymentResult.error)
@@ -102,7 +98,7 @@ async function deployAccount(account: any) {
     await supabaseAdmin
       .from('vps_containers')
       .update({
-        account_count: availableContainer ? availableContainer.account_count + 1 : 1
+        account_count: availableContainer ? (availableContainer.account_count ?? 0) + 1 : 1
       })
       .eq('container_id', containerId)
 
@@ -149,7 +145,7 @@ async function deployAccount(account: any) {
   }
 }
 
-async function stopAccount(account: any) {
+async function stopAccount(account: MTAccount) {
   try {
     if (!account.vps_container_id) {
       return NextResponse.json({ error: 'Account not deployed' }, { status: 400 })
@@ -182,7 +178,7 @@ async function stopAccount(account: any) {
       await supabaseAdmin
         .from('vps_containers')
         .update({
-          account_count: Math.max(0, container.account_count - 1)
+          account_count: Math.max(0, (container.account_count ?? 1) - 1)
         })
         .eq('container_id', account.vps_container_id)
     }
@@ -212,13 +208,13 @@ async function stopAccount(account: any) {
   }
 }
 
-async function restartAccount(account: any) {
+async function restartAccount(account: MTAccount) {
   // Stop then deploy
   await stopAccount(account)
   return await deployAccount(account)
 }
 
-async function getAccountStatus(account: any) {
+async function getAccountStatus(account: MTAccount) {
   try {
     if (!account.vps_container_id) {
       return NextResponse.json({
@@ -286,10 +282,10 @@ async function createNewContainer(): Promise<{ container_id: string }> {
   return { container_id: containerId }
 }
 
-async function deployToContainer(containerId: string, accountData: any): Promise<{ success: boolean; error?: string }> {
+async function deployToContainer(containerId: string, accountData: MTAccount): Promise<{ success: boolean; error?: string }> {
   // This would deploy the MT4/MT5 EA to the container
   // For now, we'll simulate this
-  console.log(`Deploying account ${accountData.accountId} to container ${containerId}`)
+  console.log(`Deploying account ${accountData.account_login} to container ${containerId}`)
   
   // Simulate deployment time
   await new Promise(resolve => setTimeout(resolve, 1000))
@@ -327,9 +323,9 @@ async function checkContainerStatus(containerId: string, accountId: string): Pro
   return statuses[Math.floor(Math.random() * statuses.length)]
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     // Get user from auth
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -365,8 +361,8 @@ export async function GET(request: NextRequest) {
       summary: {
         total_containers: containers.length,
         active_containers: containers.filter(c => c.status === 'active').length,
-        total_capacity: containers.reduce((sum, c) => sum + c.max_accounts, 0),
-        used_capacity: containers.reduce((sum, c) => sum + c.account_count, 0),
+        total_capacity: containers.reduce((sum, c) => sum + (c.max_accounts ?? 100), 0),
+        used_capacity: containers.reduce((sum, c) => sum + (c.account_count ?? 0), 0),
       }
     })
 

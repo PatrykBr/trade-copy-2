@@ -60,7 +60,7 @@ export default function AccountsPage() {
         return
       }
 
-      setAccounts(data || [])
+      setAccounts((data || []) as MTAccount[])
     } catch (error) {
       console.error('Error fetching accounts:', error)
     } finally {
@@ -119,7 +119,7 @@ export default function AccountsPage() {
 
       // TODO: Trigger VPS deployment for this account
       console.log('Account added, should trigger VPS deployment:', data)
-    } catch (error) {
+    } catch {
       setError('Failed to add account')
     } finally {
       setFormLoading(false)

@@ -26,18 +26,18 @@ export function initializeWebSocketServer(server: HTTPServer) {
       }
 
       // Verify JWT token (you'd use your actual JWT secret)
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { sub: string }
       
       // Get user from Supabase
-      const { data: user, error } = await supabaseAdmin.auth.admin.getUserById(decoded.sub)
-      if (error || !user) {
+      const { data, error } = await supabaseAdmin.auth.admin.getUserById(decoded.sub)
+      if (error || !data?.user) {
         return next(new Error('Invalid authentication token'))
       }
 
-      socket.data.userId = user.id
-      socket.data.userEmail = user.email
+      socket.data.userId = data.user.id
+      socket.data.userEmail = data.user.email
       next()
-    } catch (error) {
+        } catch {
       next(new Error('Authentication failed'))
     }
   })
@@ -67,7 +67,7 @@ export function initializeWebSocketServer(server: HTTPServer) {
 
         socket.join(`account:${accountId}`)
         socket.emit('subscribed', { type: 'account', id: accountId })
-      } catch (error) {
+        } catch {
         socket.emit('error', { message: 'Failed to subscribe to account' })
       }
     })
@@ -90,7 +90,7 @@ export function initializeWebSocketServer(server: HTTPServer) {
 
         socket.join(`copy-rule:${copyRuleId}`)
         socket.emit('subscribed', { type: 'copy-rule', id: copyRuleId })
-      } catch (error) {
+        } catch {
         socket.emit('error', { message: 'Failed to subscribe to copy rule' })
       }
     })
@@ -121,7 +121,7 @@ function setupSupabaseSubscriptions() {
   if (!io) return
 
   // Subscribe to trade changes
-  const tradesSubscription = supabaseAdmin
+  supabaseAdmin
     .channel('trades-changes')
     .on('postgres_changes', 
       { event: '*', schema: 'public', table: 'trades' },
@@ -157,7 +157,7 @@ function setupSupabaseSubscriptions() {
     .subscribe()
 
   // Subscribe to copy operation changes
-  const copyOpsSubscription = supabaseAdmin
+  supabaseAdmin
     .channel('copy-operations-changes')
     .on('postgres_changes',
       { event: '*', schema: 'public', table: 'copy_operations' },
@@ -193,7 +193,7 @@ function setupSupabaseSubscriptions() {
     .subscribe()
 
   // Subscribe to account status changes
-  const accountsSubscription = supabaseAdmin
+  supabaseAdmin
     .channel('accounts-changes')
     .on('postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'mt_accounts' },
@@ -218,7 +218,7 @@ function setupSupabaseSubscriptions() {
     .subscribe()
 
   // Subscribe to system events
-  const systemEventsSubscription = supabaseAdmin
+  supabaseAdmin
     .channel('system-events-changes')
     .on('postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'system_events' },
@@ -260,7 +260,7 @@ function setupSupabaseSubscriptions() {
 }
 
 // Helper functions to emit events from other parts of the application
-export function emitTradeUpdate(accountId: string, userId: string, trade: any) {
+export function emitTradeUpdate(accountId: string, userId: string, trade: Record<string, unknown>) {
   if (!io) return
   
   io.to(`account:${accountId}`).emit('trade:update', {
@@ -274,7 +274,7 @@ export function emitTradeUpdate(accountId: string, userId: string, trade: any) {
   })
 }
 
-export function emitCopyOperationUpdate(copyRuleId: string, userId: string, operation: any) {
+export function emitCopyOperationUpdate(copyRuleId: string, userId: string, operation: Record<string, unknown>) {
   if (!io) return
   
   io.to(`copy-rule:${copyRuleId}`).emit('copy-operation:update', {

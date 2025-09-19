@@ -97,7 +97,7 @@ export default function CopyRulesPage() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-      setCopyRules(rulesData || [])
+      setCopyRules((rulesData || []) as CopyRule[])
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -165,7 +165,7 @@ export default function CopyRulesPage() {
       })
       setShowAddForm(false)
       fetchData()
-    } catch (error) {
+    } catch {
       setError('Failed to create copy rule')
     } finally {
       setFormLoading(false)

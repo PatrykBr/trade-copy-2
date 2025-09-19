@@ -17,13 +17,14 @@ import {
   Copy,
   BarChart3
 } from 'lucide-react'
+import type { User } from '@supabase/supabase-js'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
 
@@ -121,7 +122,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   )
 }
 
-function SidebarContent({ navigation, onLogout, user }: { navigation: any[], onLogout: () => void, user: any }) {
+function SidebarContent({ navigation, onLogout, user }: { navigation: Array<{ name: string; href: string; icon: React.ComponentType<{ className?: string }> }>, onLogout: () => void, user: User | null }) {
   return (
     <div className="flex-1 flex flex-col min-h-0 border-r border-gray-200 bg-white">
       <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
@@ -145,10 +146,10 @@ function SidebarContent({ navigation, onLogout, user }: { navigation: any[], onL
         <div className="flex items-center w-full">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 truncate">
-              {user.user_metadata?.full_name || user.email}
+              {user?.user_metadata?.full_name || user?.email}
             </p>
             <p className="text-sm text-gray-500 truncate">
-              {user.email}
+              {user?.email}
             </p>
           </div>
           <Button

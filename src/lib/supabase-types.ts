@@ -1,293 +1,572 @@
-// Database types
-export interface Database {
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
   public: {
     Tables: {
-      users: {
+      copy_operations: {
         Row: {
+          copy_rule_id: string
+          created_at: string | null
+          error_message: string | null
+          executed_at: string | null
           id: string
-          email: string
-          full_name: string | null
-          subscription_tier: string
-          created_at: string
-          updated_at: string
+          latency_ms: number | null
+          master_trade_id: string
+          operation_type: string
+          retry_count: number | null
+          slave_trade_id: string | null
+          status: string | null
         }
         Insert: {
+          copy_rule_id: string
+          created_at?: string | null
+          error_message?: string | null
+          executed_at?: string | null
           id?: string
-          email: string
-          full_name?: string | null
-          subscription_tier?: string
-          created_at?: string
-          updated_at?: string
+          latency_ms?: number | null
+          master_trade_id: string
+          operation_type: string
+          retry_count?: number | null
+          slave_trade_id?: string | null
+          status?: string | null
         }
         Update: {
+          copy_rule_id?: string
+          created_at?: string | null
+          error_message?: string | null
+          executed_at?: string | null
           id?: string
-          email?: string
-          full_name?: string | null
-          subscription_tier?: string
-          created_at?: string
-          updated_at?: string
+          latency_ms?: number | null
+          master_trade_id?: string
+          operation_type?: string
+          retry_count?: number | null
+          slave_trade_id?: string | null
+          status?: string | null
         }
-      }
-      mt_accounts: {
-        Row: {
-          id: string
-          user_id: string
-          account_login: string
-          account_password_encrypted: string
-          server_name: string
-          platform: 'MT4' | 'MT5'
-          account_type: 'demo' | 'live'
-          role: 'master' | 'slave'
-          broker_name: string | null
-          balance: number
-          equity: number
-          margin: number
-          free_margin: number
-          is_active: boolean
-          last_connected_at: string | null
-          vps_container_id: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          account_login: string
-          account_password_encrypted: string
-          server_name: string
-          platform: 'MT4' | 'MT5'
-          account_type: 'demo' | 'live'
-          role: 'master' | 'slave'
-          broker_name?: string | null
-          balance?: number
-          equity?: number
-          margin?: number
-          free_margin?: number
-          is_active?: boolean
-          last_connected_at?: string | null
-          vps_container_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          account_login?: string
-          account_password_encrypted?: string
-          server_name?: string
-          platform?: 'MT4' | 'MT5'
-          account_type?: 'demo' | 'live'
-          role?: 'master' | 'slave'
-          broker_name?: string | null
-          balance?: number
-          equity?: number
-          margin?: number
-          free_margin?: number
-          is_active?: boolean
-          last_connected_at?: string | null
-          vps_container_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
+        Relationships: [
+          {
+            foreignKeyName: "copy_operations_copy_rule_id_fkey"
+            columns: ["copy_rule_id"]
+            isOneToOne: false
+            referencedRelation: "copy_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "copy_operations_master_trade_id_fkey"
+            columns: ["master_trade_id"]
+            isOneToOne: false
+            referencedRelation: "trades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "copy_operations_slave_trade_id_fkey"
+            columns: ["slave_trade_id"]
+            isOneToOne: false
+            referencedRelation: "trades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       copy_rules: {
         Row: {
+          copy_pending_orders: boolean | null
+          copy_stop_loss: boolean | null
+          copy_take_profit: boolean | null
+          created_at: string | null
           id: string
-          master_account_id: string
-          slave_account_id: string
-          user_id: string
-          lot_multiplier: number
-          max_lot_size: number
-          risk_percentage: number
-          copy_pending_orders: boolean
-          copy_stop_loss: boolean
-          copy_take_profit: boolean
-          symbol_filter: string[] | null
+          is_active: boolean | null
+          lot_multiplier: number | null
           magic_number_filter: number[] | null
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
           master_account_id: string
+          max_lot_size: number | null
+          risk_percentage: number | null
           slave_account_id: string
+          symbol_filter: string[] | null
+          updated_at: string | null
           user_id: string
-          lot_multiplier?: number
-          max_lot_size?: number
-          risk_percentage?: number
-          copy_pending_orders?: boolean
-          copy_stop_loss?: boolean
-          copy_take_profit?: boolean
-          symbol_filter?: string[] | null
+        }
+        Insert: {
+          copy_pending_orders?: boolean | null
+          copy_stop_loss?: boolean | null
+          copy_take_profit?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          lot_multiplier?: number | null
           magic_number_filter?: number[] | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
+          master_account_id: string
+          max_lot_size?: number | null
+          risk_percentage?: number | null
+          slave_account_id: string
+          symbol_filter?: string[] | null
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
+          copy_pending_orders?: boolean | null
+          copy_stop_loss?: boolean | null
+          copy_take_profit?: boolean | null
+          created_at?: string | null
           id?: string
+          is_active?: boolean | null
+          lot_multiplier?: number | null
+          magic_number_filter?: number[] | null
           master_account_id?: string
+          max_lot_size?: number | null
+          risk_percentage?: number | null
           slave_account_id?: string
-          user_id?: string
-          lot_multiplier?: number
-          max_lot_size?: number
-          risk_percentage?: number
-          copy_pending_orders?: boolean
-          copy_stop_loss?: boolean
-          copy_take_profit?: boolean
           symbol_filter?: string[] | null
-          magic_number_filter?: number[] | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
+          updated_at?: string | null
+          user_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "copy_rules_master_account_id_fkey"
+            columns: ["master_account_id"]
+            isOneToOne: false
+            referencedRelation: "mt_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "copy_rules_slave_account_id_fkey"
+            columns: ["slave_account_id"]
+            isOneToOne: false
+            referencedRelation: "mt_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "copy_rules_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      trades: {
+      mt_accounts: {
         Row: {
+          account_login: string
+          account_password_encrypted: string
+          account_type: string
+          balance: number | null
+          broker_name: string | null
+          created_at: string | null
+          equity: number | null
+          free_margin: number | null
           id: string
-          account_id: string
-          ticket: number
-          symbol: string
-          trade_type: string
-          lot_size: number
-          open_price: number | null
-          close_price: number | null
-          stop_loss: number | null
-          take_profit: number | null
-          commission: number
-          swap: number
-          profit: number
-          magic_number: number
-          comment: string | null
-          open_time: string | null
-          close_time: string | null
-          status: string
-          is_copied_trade: boolean
-          master_trade_id: string | null
-          created_at: string
-          updated_at: string
+          is_active: boolean | null
+          last_connected_at: string | null
+          margin: number | null
+          platform: string
+          role: string
+          server_name: string
+          updated_at: string | null
+          user_id: string
+          vps_container_id: string | null
         }
         Insert: {
+          account_login: string
+          account_password_encrypted: string
+          account_type: string
+          balance?: number | null
+          broker_name?: string | null
+          created_at?: string | null
+          equity?: number | null
+          free_margin?: number | null
           id?: string
-          account_id: string
-          ticket: number
-          symbol: string
-          trade_type: string
-          lot_size: number
-          open_price?: number | null
-          close_price?: number | null
-          stop_loss?: number | null
-          take_profit?: number | null
-          commission?: number
-          swap?: number
-          profit?: number
-          magic_number?: number
-          comment?: string | null
-          open_time?: string | null
-          close_time?: string | null
-          status?: string
-          is_copied_trade?: boolean
-          master_trade_id?: string | null
-          created_at?: string
-          updated_at?: string
+          is_active?: boolean | null
+          last_connected_at?: string | null
+          margin?: number | null
+          platform: string
+          role: string
+          server_name: string
+          updated_at?: string | null
+          user_id: string
+          vps_container_id?: string | null
         }
         Update: {
+          account_login?: string
+          account_password_encrypted?: string
+          account_type?: string
+          balance?: number | null
+          broker_name?: string | null
+          created_at?: string | null
+          equity?: number | null
+          free_margin?: number | null
           id?: string
-          account_id?: string
-          ticket?: number
-          symbol?: string
-          trade_type?: string
-          lot_size?: number
-          open_price?: number | null
-          close_price?: number | null
-          stop_loss?: number | null
-          take_profit?: number | null
-          commission?: number
-          swap?: number
-          profit?: number
-          magic_number?: number
-          comment?: string | null
-          open_time?: string | null
-          close_time?: string | null
-          status?: string
-          is_copied_trade?: boolean
-          master_trade_id?: string | null
-          created_at?: string
-          updated_at?: string
+          is_active?: boolean | null
+          last_connected_at?: string | null
+          margin?: number | null
+          platform?: string
+          role?: string
+          server_name?: string
+          updated_at?: string | null
+          user_id?: string
+          vps_container_id?: string | null
         }
-      }
-      copy_operations: {
-        Row: {
-          id: string
-          master_trade_id: string
-          copy_rule_id: string
-          slave_trade_id: string | null
-          operation_type: string
-          status: string
-          error_message: string | null
-          latency_ms: number | null
-          executed_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          master_trade_id: string
-          copy_rule_id: string
-          slave_trade_id?: string | null
-          operation_type: string
-          status: string
-          error_message?: string | null
-          latency_ms?: number | null
-          executed_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          master_trade_id?: string
-          copy_rule_id?: string
-          slave_trade_id?: string | null
-          operation_type?: string
-          status?: string
-          error_message?: string | null
-          latency_ms?: number | null
-          executed_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
+        Relationships: [
+          {
+            foreignKeyName: "mt_accounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_events: {
         Row: {
-          id: string
-          event_type: string
           account_id: string | null
-          severity: string
+          container_id: string | null
+          created_at: string | null
+          event_type: string
+          id: string
           message: string
-          metadata: Record<string, unknown> | null
-          created_at: string
+          metadata: Json | null
+          severity: string | null
         }
         Insert: {
-          id?: string
-          event_type: string
           account_id?: string | null
-          severity: string
+          container_id?: string | null
+          created_at?: string | null
+          event_type: string
+          id?: string
           message: string
-          metadata?: any | null
-          created_at?: string
+          metadata?: Json | null
+          severity?: string | null
         }
         Update: {
-          id?: string
-          event_type?: string
           account_id?: string | null
-          severity?: string
+          container_id?: string | null
+          created_at?: string | null
+          event_type?: string
+          id?: string
           message?: string
-          metadata?: any | null
-          created_at?: string
+          metadata?: Json | null
+          severity?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "system_events_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "mt_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_events_container_id_fkey"
+            columns: ["container_id"]
+            isOneToOne: false
+            referencedRelation: "vps_containers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
+      trades: {
+        Row: {
+          account_id: string
+          close_price: number | null
+          close_time: string | null
+          comment: string | null
+          commission: number | null
+          created_at: string | null
+          id: string
+          is_copied_trade: boolean | null
+          lot_size: number
+          magic_number: number | null
+          master_trade_id: string | null
+          open_price: number | null
+          open_time: string | null
+          profit: number | null
+          status: string | null
+          stop_loss: number | null
+          swap: number | null
+          symbol: string
+          take_profit: number | null
+          ticket: number
+          trade_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          account_id: string
+          close_price?: number | null
+          close_time?: string | null
+          comment?: string | null
+          commission?: number | null
+          created_at?: string | null
+          id?: string
+          is_copied_trade?: boolean | null
+          lot_size: number
+          magic_number?: number | null
+          master_trade_id?: string | null
+          open_price?: number | null
+          open_time?: string | null
+          profit?: number | null
+          status?: string | null
+          stop_loss?: number | null
+          swap?: number | null
+          symbol: string
+          take_profit?: number | null
+          ticket: number
+          trade_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          account_id?: string
+          close_price?: number | null
+          close_time?: string | null
+          comment?: string | null
+          commission?: number | null
+          created_at?: string | null
+          id?: string
+          is_copied_trade?: boolean | null
+          lot_size?: number
+          magic_number?: number | null
+          master_trade_id?: string | null
+          open_price?: number | null
+          open_time?: string | null
+          profit?: number | null
+          status?: string | null
+          stop_loss?: number | null
+          swap?: number | null
+          symbol?: string
+          take_profit?: number | null
+          ticket?: number
+          trade_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trades_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "mt_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trades_master_trade_id_fkey"
+            columns: ["master_trade_id"]
+            isOneToOne: false
+            referencedRelation: "trades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          subscription_tier: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id?: string
+          subscription_tier?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          subscription_tier?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      vps_containers: {
+        Row: {
+          account_count: number | null
+          container_id: string
+          cpu_usage: number | null
+          created_at: string | null
+          id: string
+          max_accounts: number | null
+          memory_usage: number | null
+          server_ip: string
+          server_region: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_count?: number | null
+          container_id: string
+          cpu_usage?: number | null
+          created_at?: string | null
+          id?: string
+          max_accounts?: number | null
+          memory_usage?: number | null
+          server_ip: string
+          server_region?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_count?: number | null
+          container_id?: string
+          cpu_usage?: number | null
+          created_at?: string | null
+          id?: string
+          max_accounts?: number | null
+          memory_usage?: number | null
+          server_ip?: string
+          server_region?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }
 
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const

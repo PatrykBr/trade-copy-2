@@ -13,7 +13,7 @@ export function decryptCredentials(encryptedData: string): { login: string; pass
     const bytes = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY)
     const decryptedData = bytes.toString(CryptoJS.enc.Utf8)
     return JSON.parse(decryptedData)
-  } catch (error) {
+  } catch {
     throw new Error('Failed to decrypt credentials')
   }
 }

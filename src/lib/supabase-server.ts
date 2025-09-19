@@ -4,8 +4,8 @@ import { cookies } from 'next/headers'
 import type { Database } from './supabase-types'
 
 // Server-side Supabase client
-export const createServerSupabaseClient = () => {
-  const cookieStore = cookies()
+export const createServerSupabaseClient = async () => {
+  const cookieStore = await cookies()
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,11 +15,11 @@ export const createServerSupabaseClient = () => {
         get(name: string) {
           return cookieStore.get(name)?.value
         },
-        set(name: string, value: string, options: any) {
+        set(name: string, value: string, options: Record<string, unknown>) {
           cookieStore.set(name, value, options)
         },
-        remove(name: string, options: any) {
-          cookieStore.delete(name, options)
+        remove(name: string, options: Record<string, unknown>) {
+          cookieStore.delete({ name, ...options })
         },
       },
     }

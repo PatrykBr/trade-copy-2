@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Activity, TrendingUp, Users, Copy, AlertCircle, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
+import { Tables } from '@/lib/supabase-types'
 
 interface DashboardStats {
   totalAccounts: number
@@ -14,6 +15,12 @@ interface DashboardStats {
   activeCopyRules: number
   todayProfitLoss: number
   systemStatus: 'healthy' | 'warning' | 'error'
+}
+
+type TradeWithAccount = Tables<'trades'> & {
+  mt_accounts: {
+    user_id: string
+  }
 }
 
 export default function DashboardPage() {
@@ -26,7 +33,7 @@ export default function DashboardPage() {
     systemStatus: 'healthy'
   })
   const [loading, setLoading] = useState(true)
-  const [recentTrades, setRecentTrades] = useState<any[]>([])
+  const [recentTrades, setRecentTrades] = useState<TradeWithAccount[]>([])
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -264,7 +271,7 @@ export default function DashboardPage() {
                       ${(trade.profit || 0).toFixed(2)}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {new Date(trade.created_at).toLocaleDateString()}
+                      {new Date(trade.created_at || '').toLocaleDateString()}
                     </p>
                   </div>
                 </div>

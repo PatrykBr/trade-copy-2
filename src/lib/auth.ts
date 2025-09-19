@@ -1,8 +1,9 @@
 import { createServerSupabaseClient } from './supabase-server'
 import { redirect } from 'next/navigation'
+import { TablesInsert } from './supabase-types'
 
 export async function getUser() {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
   
   try {
     const { data: { user }, error } = await supabase.auth.getUser()
@@ -29,7 +30,7 @@ export async function requireAuth() {
 }
 
 export async function getUserProfile(userId: string) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
   
   const { data: profile, error } = await supabase
     .from('users')
@@ -45,16 +46,18 @@ export async function getUserProfile(userId: string) {
   return profile
 }
 
-export async function createUserProfile(user: any) {
-  const supabase = createServerSupabaseClient()
+export async function createUserProfile(user: { id: string; email?: string; user_metadata?: Record<string, unknown> }) {
+  const supabase = await createServerSupabaseClient()
+  
+  const userData: TablesInsert<'users'> = {
+    id: user.id,
+    email: user.email || '',
+    full_name: user.user_metadata?.full_name as string || null,
+  }
   
   const { data, error } = await supabase
     .from('users')
-    .insert({
-      id: user.id,
-      email: user.email,
-      full_name: user.user_metadata?.full_name || null,
-    })
+    .insert(userData)
     .select()
     .single()
   
